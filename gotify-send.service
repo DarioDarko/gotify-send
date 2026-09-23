@@ -1,0 +1,12 @@
+[Unit]
+Description=gotify-send
+
+[Service]
+ExecStart=%h/.local/bin/gotify-send
+EnvironmentFile=%h/.config/gotify-send/gotify-send.env
+Type=simple
+Restart=on-success
+RestartSec=5
+
+[Install]
+WantedBy=default.target

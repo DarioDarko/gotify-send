@@ -1,0 +1,126 @@
+#!/usr/bin/env dash
+
+#-------------------#
+#----GOTIFY-SEND----#
+#-------------------#
+
+# check dependencies
+
+for dependency in curl jq websocat
+do
+	command -v "$dependency" > /dev/null 2>&1 \
+	|| { printf "%s is not installed\n" "$dependency" 1>&2; exit 1; }
+done
+
+# check env vars
+
+[ -n "$GOTIFY_URL" ] \
+|| { printf "GOTIFY_URL is not set\n" 1>&2; exit 1; }
+
+[ -n "$GOTIFY_TOKEN" ] \
+|| { printf "GOTIFY_TOKEN is not set\n" 1>&2; exit 1; }
+
+# get hook
+
+[ "$1" = "--hook" ] && HOOK="$2"
+
+if [ -n "$HOOK" ] && ! [ -x "$HOOK" ]
+then
+	printf "cant't set hook\n" 1>&2
+	printf "%s is not executable\n" "$2" 1>&2
+	notify-send --urgency "critical" "gotify-send" "hook is not executable"
+
+	exit 1
+fi
+
+# strip protocol from url
+
+GOTIFY_URL="${GOTIFY_URL#https://}"
+GOTIFY_URL="${GOTIFY_URL#http://}"
+GOTIFY_URL="${GOTIFY_URL#wss://}"
+GOTIFY_URL="${GOTIFY_URL#ws://}"
+
+# cache directory
+
+cache_dir="${HOME}/.cache/gotify-send"
+
+[ -d "$cache_dir" ] \
+|| mkdir -p "$cache_dir"
+
+# listen to websocket
+
+printf "gotify-send started\n"
+notify-send "gotify-send" "started"
+
+websocat --no-close \
+"wss://${GOTIFY_URL}/stream?token=${GOTIFY_TOKEN}" \
+| while read -r response
+do
+	# parse json
+
+	title=$(printf "%s" "$response" | jq -r '.title')
+	message=$(printf "%s" "$response" | jq -r '.message')
+	priority=$(printf "%s" "$response" | jq -r '.priority')
+	appid=$(printf "%s" "$response" | jq -r '.appid')
+
+	# set urgency
+
+	if [ "$priority" -gt 7 ]
+	then
+		urgency="critical"
+	elif [ "$priority" -gt 3 ]
+	then
+		urgency="normal"
+	else
+		urgency="low"
+	fi
+
+	# get app icon
+
+	icon="${cache_dir}/icon_${appid}"
+
+	if ! [ -f "$icon" ]
+	then
+		icon_path=$(
+			curl -s -X GET "https://${GOTIFY_URL}/application?token=${GOTIFY_TOKEN}" \
+			| jq -r ".[] | select(.id == ${appid}) | .image"
+		)
+
+		curl -s "https://${GOTIFY_URL}/${icon_path}" > "$icon"
+	fi
+
+	# send message
+
+	if notify-send \
+	--urgency "$urgency" \
+	--icon "$icon" \
+	"$title" "$message"
+	then
+		printf "%s: %s [%s] (app %s)\n" "$title" "$message" "$priority" "$appid"
+	else
+		printf "failed sending gotify message\n" 1>&2
+		printf "%s: %s [%s] (app %s)\n" "$title" "$message" "$priority" "$appid" 1>&2
+
+		notify-send --urgency "critical" "gotify-send" "failed sending message"
+	fi
+
+	# hook
+
+	[ -n "$HOOK" ] || continue
+
+	if "$HOOK" \
+	--title "$title" \
+	--message "$message" \
+	--priority "$priority" \
+	--appid "$appid" > /dev/null 2>&1
+	then
+		printf "executed hook: %s\n" "$HOOK"
+	else
+		printf "failed executing hook: %s\n" "$HOOK" 1>&2
+	fi
+done
+
+printf "gotify-send exited\n"
+notify-send "gotify-send" "exited"
+
+exit 0
