@@ -26,7 +26,7 @@ done
 
 if [ -n "$HOOK" ] && ! [ -x "$HOOK" ]
 then
-	printf "cant't set hook\n" 1>&2
+	printf "can't set hook\n" 1>&2
 	printf "%s is not executable\n" "$2" 1>&2
 	notify-send --urgency "critical" "gotify-send" "hook is not executable"
 
