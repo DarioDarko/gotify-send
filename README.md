@@ -56,7 +56,8 @@ systemctl --user enable --now gotify-send
 ## Hook
 
 > [!WARNING]
-> Use the hook with caution, gotify-send spawns whatever process you configure as the hook!
+> Use with caution, gotify-send spawns whatever process you configure as the hook!<br>
+> Also keep in mind, that *anyone* with access to your gotify app tokens can trigger execution of the hook. So you should **not** use it for critical commands like `rm` or anything with `ssh`!<br>
 
 The gotify-send hook is an optional feature you can use to ... well, that's up to you. The notification will be forwarded to any script or application you please
 
