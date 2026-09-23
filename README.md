@@ -1,0 +1,95 @@
+# gotify-send
+
+**View gotify notifications directly in your desktop session**
+
+✓ Desktop environment agnostic<br>
+✓ Compatible with daemons like mako and dunst<br>
+✓ Displays gotify application icons<br>
+✓ Optional hook feature<br>
+✓ Lightweight and fast
+
+## Dependencies
+
+> [!NOTE]
+> If you don't want dash installed on your system you can simply change the shebang to bash, gotify-send will still work
+
+- [dash](https://wiki.archlinux.org/title/Dash)
+- [curl](https://github.com/curl/curl)
+- [jq](https://github.com/jqlang/jq)
+- [websocat](https://github.com/vi/websocat)
+
+## Installation
+
+There's 2 ways to run gotify-send:
+
+A) just start the script<br>
+B) systemd service (recommended)
+
+For option A you need to set *GOTIFY_URL* and *GOTIFY_TOKEN* environment variables and run `./gotify-send`
+
+**Option B)**
+
+```bash
+# Clone and cd
+git clone https://github.com/DarioDarko/gotify-send
+cd gotify-send
+
+# Make gotify-send executable and copy it
+chmod +x gotify-send
+mkdir -p ~/.local/bin
+cp gotify-send ~/.local/bin
+
+# Edit configuration
+# HOOK is an optional setting you can ignore
+vim gotify-send.env
+
+# Copy gotify-send config
+mkdir -p ~/.config/gotify-send
+cp gotify-send.env ~/.config/gotify-send
+
+# Enable systemd service
+mkdir -p ~/.config/systemd/user
+cp gotify-send.service ~/.config/systemd/user
+systemctl --user enable --now gotify-send
+```
+
+## Hook
+
+> [!WARNING]
+> Use the hook with caution, gotify-send spawns whatever process you configure as the hook!
+
+The gotify-send hook is an optional feature you can use to ... well, that's up to you. The notification will be forwarded to any script or application you please
+
+Example usecases:
+
+- Text to Speech notifications
+- Pause audio/video playback for important notifications
+- Auto-enable *Do Not Disturb* mode on meeting notifications
+- Remote control your PC with your smartphone
+- Log notifications to a database
+
+All relevant notification details will be passed as:
+
+> --title "$title"<br>
+> --message "$message"<br>
+> --priority "$priority"<br>
+> --appid "$appid"
+
+Set the hook in *~/.config/gotify-send/gotify-send.env* or start gotify-send with `--hook "/path/to/hook"`
+
+You can find an example on how to use the hook [here](https://raw.githubusercontent.com/DarioDarko/gotify-send/refs/heads/main/gotify-send-hook.sh)
+
+## Removal
+
+```bash
+# Disable systemd service
+systemctl --user disable --now gotify-send
+
+# Remove gotify-send
+rm ~/.local/bin/gotify-send
+
+# Remove config
+rm -r ~/.config/gotify-send
+```
+
+Having trouble using gotify-send? Feel free to open an issue
