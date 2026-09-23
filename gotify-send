@@ -100,7 +100,6 @@ do
 	else
 		printf "failed sending gotify message\n" 1>&2
 		printf "%s: %s [%s] (app %s)\n" "$title" "$message" "$priority" "$appid" 1>&2
-
 		notify-send --urgency "critical" "gotify-send" "failed sending message"
 	fi
 
@@ -117,6 +116,7 @@ do
 		printf "executed hook: %s\n" "$HOOK"
 	else
 		printf "failed executing hook: %s\n" "$HOOK" 1>&2
+		notify-send --urgency "critical" "gotify-send" "failed executing hook"
 	fi
 done
 
