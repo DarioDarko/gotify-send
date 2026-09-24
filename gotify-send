@@ -20,11 +20,19 @@ done
 [ -n "$GOTIFY_TOKEN" ] \
 || { printf "GOTIFY_TOKEN is not set\n" 1>&2; exit 1; }
 
-# get hook
+# get hook settings
 
-[ "$1" = "--hook" ] && HOOK="$2"
+while [ -n "$1" ] && [ -n "$2" ]
+do
+	case "${1#--}" in
+		"hook") HOOK="$2";;
+		"hook-allowed-apps") HOOK_ALLOWED_APPS="$2";;
+	esac
 
-if [ -n "$HOOK" ] && ! [ -x "$HOOK" ]
+	shift 2
+done
+
+if [ -n "$HOOK" ] && [ -n "$HOOK_ALLOWED_APPS" ] && ! [ -x "$HOOK" ]
 then
 	printf "can't set hook\n" 1>&2
 	printf "%s is not executable\n" "$2" 1>&2
@@ -105,7 +113,13 @@ do
 
 	# hook
 
-	[ -n "$HOOK" ] || continue
+	[ -n "$HOOK" ] && [ -n "$HOOK_ALLOWED_APPS" ] \
+	|| continue
+
+	case ",${HOOK_ALLOWED_APPS}," in
+		*",${appid},"*) :;;
+		*) continue;;
+	esac
 
 	if "$HOOK" \
 	--title "$title" \

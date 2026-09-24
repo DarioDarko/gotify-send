@@ -40,7 +40,7 @@ mkdir -p ~/.local/bin
 cp gotify-send ~/.local/bin
 
 # Edit configuration
-# HOOK is an optional setting you can ignore
+# HOOK and HOOK_ALLOWED_APPS are optional settings you can ignore
 vim gotify-send.env
 
 # Copy gotify-send config
@@ -61,7 +61,7 @@ systemctl --user enable --now gotify-send
 
 The gotify-send hook is an optional feature you can use to ... well, that's up to you. The notification will be forwarded to any script or application you please
 
-Example usecases:
+**Example usecases**
 
 - Text to Speech notifications
 - Pause audio/video playback for important notifications
@@ -76,7 +76,17 @@ All relevant notification details will be passed as:
 > --priority "$priority"<br>
 > --appid "$appid"
 
-Set the hook in *~/.config/gotify-send/gotify-send.env* or start gotify-send with `--hook "/path/to/hook"`
+**Configuration**
+
+```ini
+# Path to your hook
+HOOK=/path/to/hook
+
+# Gotify apps that are allowed to trigger hook execution
+HOOK_ALLOWED_APPS=1,2,3,4
+```
+
+Configure the hook in *~/.config/gotify-send/gotify-send.env* or start gotify-send with `--hook "/path/to/hook"` and `--hook-allowed-apps "1,2,3,4"`. Enable gotify apps by adding their app id to the comma separated list, apps that are not explicitly allowed will be ignored. If you don't want to use this feature leave HOOK= and HOOK_ALLOWED_APPS= empty
 
 You can find an example on how to use the hook [here](https://raw.githubusercontent.com/DarioDarko/gotify-send/refs/heads/main/gotify-send-hook.sh)
 
